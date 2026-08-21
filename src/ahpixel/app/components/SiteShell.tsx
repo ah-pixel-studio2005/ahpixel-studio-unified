@@ -19,7 +19,7 @@ export function Logo({ href = "/" }: { href?: string }) {
 
 export function Arrow() { return <span className="arrow" aria-hidden="true">→</span>; }
 
-export function SiteShell({ children }: { children: React.ReactNode }) {
+export function SiteShell({ children, path }: { children: React.ReactNode; path: string }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activePath, setActivePath] = useState("");
@@ -74,7 +74,6 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    const path = window.location.pathname;
     const locale: Language = path === "/es" || path.startsWith("/es/") ? "es" : "en";
     const normalizedPath = path.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
     localStorage.setItem("ahpixel-language", locale);
@@ -92,13 +91,13 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
     }), { rootMargin: "-45% 0px -48%", threshold: 0 });
     sections.forEach(section => observer.observe(section));
     return () => { cancelAnimationFrame(frame); observer.disconnect(); };
-  }, []);
+  }, [path]);
 
   const switchLanguage = (next: Language) => {
     localStorage.setItem("ahpixel-language", next);
     const path = window.location.pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
     const destination = next === "es" ? `/es${path === "/" ? "" : path}` : path;
-    window.location.assign(`${destination}${window.location.search}${window.location.hash}`);
+    window.dispatchEvent(new CustomEvent("ahpixel:navigate", { detail: `${destination}${window.location.search}${window.location.hash}` }));
   };
 
   useEffect(() => {
@@ -137,7 +136,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
       <button className={`menu-toggle ${menuOpen ? "is-open" : ""}`} aria-label={menuOpen ? "Close navigation" : "Open navigation"} aria-expanded={menuOpen} aria-controls="mobile-menu" onClick={toggleMenu}><i /><i /></button>
       <div id="mobile-menu" className={`mobile-menu ${menuOpen ? "is-open" : ""}`} aria-hidden={!menuOpen}>
         <nav aria-label="Mobile navigation">{navigation[language].map(([label, href], index) => <a href={localizedHref(href)} key={href} onClick={() => setMenuOpen(false)}><span>0{index + 1}</span>{label}</a>)}</nav>
-        <LanguageSwitcher language={language} switchLanguage={switchLanguage} mobile />
+        <LanguageSwitcher language={language} switchLanguage={(next) => { setMenuOpen(false); switchLanguage(next); }} mobile />
         <ThemeSwitcher language={language} mode={themeMode} resolved={resolvedTheme} open={themeOpen} setOpen={setThemeOpen} switchTheme={switchTheme} mobile />
         <a href={localizedHref("/contact")} className="button button-primary" onClick={() => setMenuOpen(false)}>{language === "es" ? "Iniciar proyecto" : "Start a project"} <Arrow /></a>
         <div className="menu-meta"><span>Web design · Development</span><a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a></div>

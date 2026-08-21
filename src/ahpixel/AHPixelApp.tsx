@@ -40,5 +40,5 @@ export default function AHPixelApp({ path }: { path: string }) {
     document.title = titles[normalized] ?? titles["/"];
     window.scrollTo({ top: 0 });
   }, [path]);
-  return <SiteShell>{resolvePage(path)}</SiteShell>;
+  return <SiteShell path={path}>{resolvePage(path)}</SiteShell>;
 }
