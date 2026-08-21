@@ -32,7 +32,12 @@ export function ShadowSurface({ css, children, initialTarget, title }: { css: st
   useEffect(() => {
     document.title = title;
     if (!mount || !initialTarget) return;
-    const scrollToTarget = () => mount.querySelector(initialTarget)?.scrollIntoView({ block: "start" });
+    const scrollToTarget = () => {
+      const target = mount.querySelector<HTMLElement>(initialTarget);
+      if (!target) return;
+      const margin = Number.parseFloat(getComputedStyle(target).scrollMarginTop) || 0;
+      window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - margin, behavior: "auto" });
+    };
     const frame = requestAnimationFrame(scrollToTarget);
     const retries = [120, 420, 900, 1600, 2600].map(delay => window.setTimeout(scrollToTarget, delay));
     const mutations = new MutationObserver(scrollToTarget);
