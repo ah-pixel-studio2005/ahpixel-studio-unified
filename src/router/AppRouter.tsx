@@ -88,8 +88,8 @@ export function AppRouter() {
         document.body.classList.remove("route-changing");
         document.documentElement.classList.remove("route-content-entering");
         transitionActive.current = false;
-      }, 560);
-    }, 330);
+      }, 400);
+    }, 240);
   }, [clearTransitionTimers]);
 
   useEffect(() => {

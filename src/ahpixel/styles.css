@@ -240,7 +240,6 @@ html[data-theme="light"] .footer-brand p,html[data-theme="light"] .footer nav a,
 .theme-panel{backdrop-filter:blur(10px)}
 .project-stage-arrow{backdrop-filter:none}
 .services-explorer,.studio-playground,.project-starter,.footer{content-visibility:auto;contain-intrinsic-size:auto 900px}
-.interactive-hero-stage,.interactive-browser,.interactive-phone,.vanta-scene,.build-visual,.playground-points{transform:translateZ(0)}
 @media(max-width:860px){
   .site-header{backdrop-filter:blur(6px)}
   .interactive-hero-stage{transform:none}
@@ -251,3 +250,12 @@ html[data-theme="light"] .footer-brand p,html[data-theme="light"] .footer nav a,
 /* Two-project portfolio stage: retain the editorial system while letting each concept carry its own atmosphere. */
 .featured-project-switch{display:grid;gap:5px;margin-bottom:28px}.featured-project-switch button{min-height:34px;padding:0 0 0 10px;display:flex;align-items:center;gap:12px;border:0;border-left:1px solid #304052;background:transparent;color:#667589;text-align:left;text-transform:uppercase;letter-spacing:.11em;font-size:7px;cursor:pointer;transition:color .25s,border-color .25s,transform .25s}.featured-project-switch button span{color:#47576b}.featured-project-switch button:hover,.featured-project-switch button.active{color:var(--white);border-left-color:var(--cyan);transform:translateX(4px)}.featured-project-switch button.active span{color:var(--cyan)}.lumen-project-stage .vanta-stage-canvas{background:#e7ece8;border-color:#a9beb9}.lumen-project-stage .vanta-stage-canvas:after{background:radial-gradient(circle at 80% 18%,rgba(104,174,164,.28),transparent 34%)}.lumen-project-stage .stage-browser-shell{background:#f5f6f1;border-color:#9fb9b3;box-shadow:0 35px 75px rgba(6,35,40,.25)}.lumen-project-stage .stage-mobile-pair>div{background:#eef2ee;border-color:#112f36}.lumen-project-stage .stage-coordinate{color:#51766f}.mobile-featured-project>span{display:block;margin-bottom:22px;color:#a7926a;text-transform:uppercase;letter-spacing:.14em;font-size:7px}.mobile-featured-project+.mobile-featured-project{padding-top:72px;border-top:1px solid var(--line)}
 @media(max-width:860px){.mobile-featured-project .mobile-stage-browser{margin-bottom:18px}}
+
+/* Faster route changes and a smaller compositing budget. */
+.page-transition-panel{transition-duration:.24s}
+.page-transition.is-reveal .page-transition-panel{transition-duration:.4s}
+.page-transition.is-cover .page-transition-trace{animation-duration:.24s}
+.page-transition.is-reveal .page-transition-trace{animation-duration:.4s}
+.route-content-entering main,.route-content-entering .footer{animation-duration:.42s}
+.route-content-entering .site-header{animation-duration:.38s}
+@keyframes route-content-arrive{from{opacity:.68;transform:translateY(10px) scale(.996)}to{opacity:1;transform:none}}

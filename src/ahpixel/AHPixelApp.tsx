@@ -22,6 +22,16 @@ const titles: Record<string, string> = {
   "/work/lumen-dental-studio": "LUMEN Dental Studio — AHPixel Studio",
 };
 
+const spanishTitles: Record<string, string> = {
+  "/": "AHPixel Studio | Diseño y desarrollo web",
+  "/work": "Proyectos seleccionados | AHPixel Studio",
+  "/services": "Servicios de diseño web | AHPixel Studio",
+  "/about": "Estudio | AHPixel Studio",
+  "/contact": "Iniciar un proyecto | AHPixel Studio",
+  "/work/vanta-barber-club": "VANTA Barber Club — AHPixel Studio",
+  "/work/lumen-dental-studio": "LUMEN Dental Studio — AHPixel Studio",
+};
+
 function resolvePage(path: string) {
   const englishPath = path.replace(/^\/es(?=\/|$)/, "") || "/";
   const spanish = path === "/es" || path.startsWith("/es/");
@@ -31,13 +41,15 @@ function resolvePage(path: string) {
   if (englishPath === "/services") return spanish ? <SpanishServicesPage /> : <ServicesPage />;
   if (englishPath === "/about") return spanish ? <SpanishAboutPage /> : <AboutPage />;
   if (englishPath === "/contact") return spanish ? <SpanishContactPage /> : <ContactPage />;
-  return <HomePage />;
+  return <HomePage language={spanish ? "es" : "en"} />;
 }
 
 export default function AHPixelApp({ path }: { path: string }) {
   useEffect(() => {
     const normalized = path.replace(/^\/es(?=\/|$)/, "") || "/";
-    document.title = titles[normalized] ?? titles["/"];
+    const spanish = path === "/es" || path.startsWith("/es/");
+    document.documentElement.lang = spanish ? "es" : "en";
+    document.title = (spanish ? spanishTitles : titles)[normalized] ?? (spanish ? spanishTitles : titles)["/"];
     window.scrollTo({ top: 0 });
   }, [path]);
   return <SiteShell path={path}>{resolvePage(path)}</SiteShell>;

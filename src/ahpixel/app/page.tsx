@@ -13,14 +13,16 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-export default function HomePage() {
+export type HomeLanguage = "en" | "es";
+
+export default function HomePage({ language = "en" }: { language?: HomeLanguage }) {
   return <main className="interactive-home">
-    <InteractiveHero />
-    <ProjectStage />
-    <ServicesExplorer />
-    <BuildJourney />
-    <StudioPlayground />
-    <ProjectStarter />
-    <SectionProgress />
+    <InteractiveHero language={language} />
+    <ProjectStage language={language} />
+    <ServicesExplorer language={language} />
+    <BuildJourney language={language} />
+    <StudioPlayground language={language} />
+    <ProjectStarter language={language} />
+    <SectionProgress language={language} />
   </main>;
 }
