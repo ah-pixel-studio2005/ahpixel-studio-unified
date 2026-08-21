@@ -30,6 +30,10 @@ export function SiteShell({ children, path }: { children: React.ReactNode; path:
   const [themeOpen, setThemeOpen] = useState(false);
   const lastScrollY = useRef(0);
   const scrollFrame = useRef(0);
+  const ignoreScrollUntil = useRef(0);
+  const scrollIntent = useRef(0);
+  const scrollIntentUntil = useRef(0);
+  const lastTouchY = useRef<number | null>(null);
   const localizedHref = (href: string) => language === "en" ? href : `/es${href === "/" ? "" : href}`;
 
   useEffect(() => {
@@ -40,20 +44,62 @@ export function SiteShell({ children, path }: { children: React.ReactNode; path:
         const nextY = Math.max(0, window.scrollY);
         const delta = nextY - lastScrollY.current;
         setScrolled(nextY > 24);
+        const hasScrollIntent = Date.now() < scrollIntentUntil.current;
+        if (Date.now() < ignoreScrollUntil.current || !hasScrollIntent) {
+          if (nextY < 120) setHeaderHidden(false);
+          lastScrollY.current = nextY;
+          scrollFrame.current = 0;
+          return;
+        }
         if (nextY < 120 || menuOpen || themeOpen) setHeaderHidden(false);
-        else if (delta > 8) setHeaderHidden(true);
-        else if (delta < -6) setHeaderHidden(false);
+        else if (scrollIntent.current > 0 && delta > 2) setHeaderHidden(true);
+        else if (scrollIntent.current < 0 && delta < -2) setHeaderHidden(false);
         lastScrollY.current = nextY;
         scrollFrame.current = 0;
       });
     };
-    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") { setMenuOpen(false); setThemeOpen(false); } };
+    const lockForInteraction = (target: EventTarget | null) => {
+      if (!(target instanceof Element) || !target.closest("button, a, input, select, textarea, [role='button'], [role='tab']")) return;
+      ignoreScrollUntil.current = Date.now() + 800;
+      lastScrollY.current = Math.max(0, window.scrollY);
+    };
+    const onInteraction = (event: Event) => lockForInteraction(event.target);
+    const markScrollIntent = (direction: number) => {
+      if (!direction) return;
+      scrollIntent.current = direction > 0 ? 1 : -1;
+      scrollIntentUntil.current = Date.now() + 520;
+    };
+    const onWheel = (event: WheelEvent) => markScrollIntent(event.deltaY);
+    const onTouchStart = (event: TouchEvent) => { lastTouchY.current = event.touches[0]?.clientY ?? null; };
+    const onTouchMove = (event: TouchEvent) => {
+      const nextTouchY = event.touches[0]?.clientY;
+      if (nextTouchY === undefined || lastTouchY.current === null) return;
+      markScrollIntent(lastTouchY.current - nextTouchY);
+      lastTouchY.current = nextTouchY;
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { setMenuOpen(false); setThemeOpen(false); }
+      const interactive = event.target instanceof Element && Boolean(event.target.closest("button, a, input, select, textarea, [role='button'], [role='tab']"));
+      if ((event.key === "Enter" || event.key === " ") && interactive) lockForInteraction(event.target);
+      else if (["ArrowDown", "PageDown", "End"].includes(event.key) || (event.key === " " && !event.shiftKey)) markScrollIntent(1);
+      else if (["ArrowUp", "PageUp", "Home"].includes(event.key) || (event.key === " " && event.shiftKey)) markScrollIntent(-1);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("keydown", onKey);
+    window.addEventListener("wheel", onWheel, { passive: true });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    document.addEventListener("pointerdown", onInteraction, true);
+    document.addEventListener("click", onInteraction, true);
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("keydown", onKey);
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      document.removeEventListener("pointerdown", onInteraction, true);
+      document.removeEventListener("click", onInteraction, true);
       if (scrollFrame.current) window.cancelAnimationFrame(scrollFrame.current);
       scrollFrame.current = 0;
     };
