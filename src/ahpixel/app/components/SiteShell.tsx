@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { siteConfig } from "../data/site";
 import { trackStudioEvent } from "../lib/events";
@@ -22,21 +22,44 @@ export function Arrow() { return <span className="arrow" aria-hidden="true">→<
 export function SiteShell({ children, path }: { children: React.ReactNode; path: string }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [headerHidden, setHeaderHidden] = useState(false);
   const [activePath, setActivePath] = useState("");
   const [language, setLanguage] = useState<Language>("en");
   const [themeMode, setThemeMode] = useState<ThemeMode>("schedule");
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("dark");
   const [themeOpen, setThemeOpen] = useState(false);
+  const lastScrollY = useRef(0);
+  const scrollFrame = useRef(0);
   const localizedHref = (href: string) => language === "en" ? href : `/es${href === "/" ? "" : href}`;
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    lastScrollY.current = Math.max(0, window.scrollY);
+    const onScroll = () => {
+      if (scrollFrame.current) return;
+      scrollFrame.current = window.requestAnimationFrame(() => {
+        const nextY = Math.max(0, window.scrollY);
+        const delta = nextY - lastScrollY.current;
+        setScrolled(nextY > 24);
+        if (nextY < 120 || menuOpen || themeOpen) setHeaderHidden(false);
+        else if (delta > 8) setHeaderHidden(true);
+        else if (delta < -6) setHeaderHidden(false);
+        lastScrollY.current = nextY;
+        scrollFrame.current = 0;
+      });
+    };
     const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") { setMenuOpen(false); setThemeOpen(false); } };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("keydown", onKey);
-    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("keydown", onKey); };
-  }, []);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("keydown", onKey);
+      if (scrollFrame.current) window.cancelAnimationFrame(scrollFrame.current);
+      scrollFrame.current = 0;
+    };
+  }, [menuOpen, themeOpen]);
+
+  useEffect(() => setHeaderHidden(false), [path]);
 
   useEffect(() => {
     const saved = localStorage.getItem("ahpixel-theme");
@@ -127,7 +150,7 @@ export function SiteShell({ children, path }: { children: React.ReactNode; path:
   }, []);
 
   return <>
-    <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
+    <header className={`site-header ${scrolled ? "is-scrolled" : ""} ${headerHidden ? "is-hidden" : ""}`} onFocusCapture={() => setHeaderHidden(false)}>
       <Logo href={localizedHref("/")} />
       <nav className="desktop-nav" aria-label="Primary navigation">{navigation[language].map(([label, href]) => <a href={localizedHref(href)} key={href} className={activePath === href ? "active" : ""} aria-current={activePath === href ? "page" : undefined}>{label}</a>)}</nav>
       <LanguageSwitcher language={language} switchLanguage={switchLanguage} />

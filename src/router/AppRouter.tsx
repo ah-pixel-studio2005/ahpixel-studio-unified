@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import "../ahpixel/styles.css";
+import "../ahpixel/header-behavior.css";
 
 import AHPixelApp from "../ahpixel/AHPixelApp";
 const VantaRoute = lazy(() => import("../demos/vanta/VantaRoute"));
